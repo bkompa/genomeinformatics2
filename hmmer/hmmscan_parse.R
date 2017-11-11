@@ -5,7 +5,7 @@ ParseHMMScanFile <- function(filePath){
     .libPaths('/home/asn32/R/x86_64-pc-linux-gnu-library/3.1')
   }
   
-  data <- readLines(con=file(filePath))
+  data <- readLines(con=file(filePath),skipNul = T)
   
   queries <- data[grep(pattern = 'Query:',data)]
   header<- grep(pattern="--- full sequence ---",data)+3
@@ -59,6 +59,20 @@ ParseHMMScanFile <- function(filePath){
     
   }
   eval(parse(text=paste0(filePath,'=result'))) #Reassign variable
-  str = paste0("save(",filePath,",file=\'",filePath,".dat\')")
+  str = paste0("save(",filePath,",file=\'",filePath,".dat\')")   #Save file
   eval(parse(text=str))
+}
+
+ImportGODb <- function(filePath){
+  db <- readLines(con=file(filePath),skipNul = T)
+  db <- db[grepl('Pfam:',db)]  #Remove headers
+  
+  GoIds <- as.character(mapply(sub,pattern=' GO:',replacement='',x=as.character(sapply(db,function(x) unlist(strsplit(x,';'))[2]))))
+  GoDescrip <- as.character(mapply(sub,pattern=' GO:',replacement='',x=as.character(sapply(db,function(x) unlist(strsplit(unlist(strsplit(x[1],'>'))[2],';'))[1]))))
+  PfamId <- as.character(mapply(sub,pattern='Pfam:',replacement='',x=as.character(sapply(db,function(x) unlist(strsplit(x,' '))[1]))))
+  return(data.frame(PfamId = PfamId,GoIDs=GoIds,GoDescrip=GoDescrip))
+}
+
+GetGoIDFromPfam <- function(PfamID,GODb){
+  
 }
